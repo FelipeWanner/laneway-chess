@@ -3,9 +3,8 @@ import Chessboard from './chess/chessComponents/Chessboard';
 
 const App = () => {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-red-300">
       <Chessboard />
-      <div className="bg-blue-500 text-white p-4">This is a Tailwind Test</div>
     </div>
   );
 };
