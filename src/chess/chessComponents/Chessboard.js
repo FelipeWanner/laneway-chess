@@ -1,94 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Square from './Square';
 import Piece from './Piece';
 
-// Define initial board setup for placing pieces
 const initialBoardState = [
-  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
-  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
+  [{ type: "rook", color: "black" }, { type: "knight", color: "black" }, { type: "bishop", color: "black" }, { type: "queen", color: "black" }, { type: "king", color: "black" }, { type: "bishop", color: "black" }, { type: "knight", color: "black" }, { type: "rook", color: "black" }],
+  [{ type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
-  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
-  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
+  [{ type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }],
+  [{ type: "rook", color: "white" }, { type: "knight", color: "white" }, { type: "bishop", color: "white" }, { type: "queen", color: "white" }, { type: "king", color: "white" }, { type: "bishop", color: "white" }, { type: "knight", color: "white" }, { type: "rook", color: "white" }],
 ];
 
 const Chessboard = () => {
-  const rows = 8;
-  const cols = 8;
-  const board = [];
-  const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Chessboard columns
-  const rowNumbers = [8, 7, 6, 5, 4, 3, 2, 1]; // Chessboard row numbers
+  const [boardState, setBoardState] = useState(initialBoardState);
 
-  // Create the squares with keys and alternating colors
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      // Create algebraic notation for each square (e.g., A1, B2, etc.)
-      const squareKey = `${columns[col]}${8 - row}`;
+  const movePiece = (fromPosition, toPosition) => {
+    console.log("From Position:", fromPosition); // Log from position
+    console.log("To Position:", toPosition); // Log to position
 
-      // Alternate colors between white and black
-      const isBlack = (row + col) % 2 === 1;
-      const pieceType = initialBoardState[row][col];
-      const pieceColor = row < 2 ? 'black' : 'white';
+    const [fromRow, fromCol] = fromPosition;
+    const [toRow, toCol] = toPosition;
 
-      // Add a Square component and conditionally render a Piece inside if present
-      board.push(
-        <Square key={squareKey} position={squareKey} isBlack={isBlack}>
-          {pieceType && <Piece type={pieceType} color={pieceColor} />}
-        </Square>
-      );
+    setBoardState((prevBoardState) => {
+        // Create a deep copy of the previous board state
+        const updatedBoard = prevBoardState.map(row => row.slice());
+
+        // Move the piece from the original position to the new position
+        const piece = updatedBoard[fromRow][fromCol];
+        updatedBoard[fromRow][fromCol] = null; // Clear the original position
+        updatedBoard[toRow][toCol] = piece; // Place the piece in the new position
+
+        console.log("Updated Board:", updatedBoard); // Log the updated board
+        return updatedBoard;
+    });
+};
+
+
+  const renderBoard = () => {
+    const board = [];
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const squareKey = `${col}-${row}`;
+        const isBlack = (row + col) % 2 === 1;
+        const piece = boardState[row][col];
+
+        board.push(
+          <Square
+            key={squareKey}
+            position={[row, col]}
+            isBlack={isBlack}
+            movePiece={movePiece}
+          >
+            {piece && <Piece type={piece.type} color={piece.color} position={[row, col]} />}
+          </Square>
+        );
+      }
     }
-  }
+    return board;
+  };
+
+  console.log("Current Board State:", boardState); // Log current board state on each render
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex justify-center items-center space-x-2">
-        {/* Row numbers on the left */}
-        <div className="flex flex-col justify-between">
-          {rowNumbers.map((number) => (
-            <div key={number} className="h-12 flex items-center justify-center">
-              {number}
-            </div>
-          ))}
-        </div>
-
-        {/* Chessboard with column letters */}
-        <div>
-          {/* Column letters on the top */}
-          <div className="flex justify-center">
-            {columns.map((letter) => (
-              <div key={letter} className="w-12 h-12 flex items-center justify-center">
-                {letter}
-              </div>
-            ))}
-          </div>
-
-          {/* Chessboard grid */}
-          <div className="grid grid-cols-8">
-            {board}
-          </div>
-
-          {/* Column letters on the bottom */}
-          <div className="flex justify-center">
-            {columns.map((letter) => (
-              <div key={letter} className="w-12 h-12 flex items-center justify-center">
-                {letter}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Row numbers on the right */}
-        <div className="flex flex-col justify-between">
-          {rowNumbers.map((number) => (
-            <div key={number} className="h-12 flex items-center justify-center">
-              {number}
-            </div>
-          ))}
-        </div>
+        <div className="grid grid-cols-8">{renderBoard()}</div>
       </div>
     </DndProvider>
   );

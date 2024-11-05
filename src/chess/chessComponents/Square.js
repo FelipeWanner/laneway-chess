@@ -3,12 +3,11 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
 
-const Square = ({ children, position, isBlack }) => {
+function Square({ children, position, isBlack, movePiece }){
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'piece',
     drop: (item) => {
-      console.log(`Piece ${item.pieceType} dropped on ${position}`);
-      // Here we can add logic to handle what happens when a piece is dropped.
+      movePiece(item.position, position); // Pass from and to positions as arrays
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
