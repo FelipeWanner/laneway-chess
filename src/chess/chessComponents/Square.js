@@ -8,6 +8,7 @@ function Square({ children, position, isBlack, movePiece }){
     accept: 'piece',
     drop: (item) => {
       movePiece(item.position, position); // Pass from and to positions as arrays
+      console.log("vendo o retorno de item.position e position dentro de Square.js", item.position, position)
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),

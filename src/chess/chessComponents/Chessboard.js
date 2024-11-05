@@ -15,9 +15,9 @@ const initialBoardState = [
   [{ type: "rook", color: "white" }, { type: "knight", color: "white" }, { type: "bishop", color: "white" }, { type: "queen", color: "white" }, { type: "king", color: "white" }, { type: "bishop", color: "white" }, { type: "knight", color: "white" }, { type: "rook", color: "white" }],
 ];
 
-const Chessboard = () => {
+export default function Chessboard(){
   const [boardState, setBoardState] = useState(initialBoardState);
-
+  
   const movePiece = (fromPosition, toPosition) => {
     console.log("From Position:", fromPosition); // Log from position
     console.log("To Position:", toPosition); // Log to position
@@ -74,4 +74,3 @@ const Chessboard = () => {
   );
 };
 
-export default Chessboard;
