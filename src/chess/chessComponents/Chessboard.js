@@ -1,44 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Square from './Square';
 import Piece from './Piece';
+import axios from 'axios';
 
-const initialBoardState = [
-  [{ type: "rook", color: "black" }, { type: "knight", color: "black" }, { type: "bishop", color: "black" }, { type: "queen", color: "black" }, { type: "king", color: "black" }, { type: "bishop", color: "black" }, { type: "knight", color: "black" }, { type: "rook", color: "black" }],
-  [{ type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }, { type: "pawn", color: "black" }],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [{ type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }, { type: "pawn", color: "white" }],
-  [{ type: "rook", color: "white" }, { type: "knight", color: "white" }, { type: "bishop", color: "white" }, { type: "queen", color: "white" }, { type: "king", color: "white" }, { type: "bishop", color: "white" }, { type: "knight", color: "white" }, { type: "rook", color: "white" }],
-];
+export default function Chessboard() {
+  const [boardState, setBoardState] = useState([]);
 
-export default function Chessboard(){
-  const [boardState, setBoardState] = useState(initialBoardState);
-  
+  // Fetch initial board state on component mount
+  useEffect(() => {
+    axios.get('http://localhost:4505/api/chess/board-state')
+      .then(response => {
+        setBoardState(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching board state:', error);
+      });
+  }, []);
+
   const movePiece = (fromPosition, toPosition) => {
-    console.log("From Position:", fromPosition); // Log from position
-    console.log("To Position:", toPosition); // Log to position
+    console.log("Attempting to move piece:", fromPosition, "to", toPosition);
 
-    const [fromRow, fromCol] = fromPosition;
-    const [toRow, toCol] = toPosition;
-
-    setBoardState((prevBoardState) => {
-        // Create a deep copy of the previous board state
-        const updatedBoard = prevBoardState.map(row => row.slice());
-
-        // Move the piece from the original position to the new position
-        const piece = updatedBoard[fromRow][fromCol];
-        updatedBoard[fromRow][fromCol] = null; // Clear the original position
-        updatedBoard[toRow][toCol] = piece; // Place the piece in the new position
-
-        console.log("Updated Board:", updatedBoard); // Log the updated board
-        return updatedBoard;
+    axios.post('http://localhost:4505/api/chess/move', {
+      fromPosition,
+      toPosition,
+    })
+    .then(response => {
+      if (response.data.valid) {
+        setBoardState(response.data.boardState); // Update board with latest state from backend
+        console.log("Board updated after move:", response.data.boardState);
+      } else {
+        console.log('Invalid move:', response.data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error validating move:', error);
     });
-};
-
+  };
 
   const renderBoard = () => {
     const board = [];
@@ -46,7 +45,7 @@ export default function Chessboard(){
       for (let col = 0; col < 8; col++) {
         const squareKey = `${col}-${row}`;
         const isBlack = (row + col) % 2 === 1;
-        const piece = boardState[row][col];
+        const piece = boardState[row]?.[col];
 
         board.push(
           <Square
@@ -63,7 +62,7 @@ export default function Chessboard(){
     return board;
   };
 
-  console.log("Current Board State:", boardState); // Log current board state on each render
+  console.log("Current Board State:", boardState);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -72,5 +71,4 @@ export default function Chessboard(){
       </div>
     </DndProvider>
   );
-};
-
+}
