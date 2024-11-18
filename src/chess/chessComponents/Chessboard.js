@@ -6,37 +6,42 @@ import Piece from './Piece';
 import axios from 'axios';
 
 export default function Chessboard() {
-  const [boardState, setBoardState] = useState([]);
+  const [boardState, setBoardState] = useState([]); // Chessboard state
+  const [currentTurn, setCurrentTurn] = useState('white'); // Track the current turn
+  const [errorMessage, setErrorMessage] = useState(null); // Store error messages for invalid moves
 
-  // Fetch initial board state on component mount
+  // Fetch initial board state and current turn on component mount
   useEffect(() => {
-    axios.get('http://localhost:4505/api/chess/board-state')
-      .then(response => {
-        setBoardState(response.data);
+    axios
+      .get('http://localhost:4505/api/chess/board-state')
+      .then((response) => {
+        setBoardState(response.data.boardState);
+        setCurrentTurn(response.data.currentTurn); // Set the turn from backend
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Error fetching board state:', error);
       });
   }, []);
 
   const movePiece = (fromPosition, toPosition) => {
-    console.log("Attempting to move piece:", fromPosition, "to", toPosition);
-
-    axios.post('http://localhost:4505/api/chess/move', {
-      fromPosition,
-      toPosition,
-    })
-    .then(response => {
-      if (response.data.valid) {
-        setBoardState(response.data.boardState); // Update board with latest state from backend
-        console.log("Board updated after move:", response.data.boardState);
-      } else {
-        console.log('Invalid move:', response.data.message);
-      }
-    })
-    .catch(error => {
-      console.error('Error validating move:', error);
-    });
+    setErrorMessage(null); // Clear any previous error message
+    axios
+      .post('http://localhost:4505/api/chess/move', {
+        fromPosition,
+        toPosition,
+      })
+      .then((response) => {
+        if (response.data.valid) {
+          setBoardState(response.data.boardState); // Update the board state
+          setCurrentTurn(response.data.currentTurn); // Update the turn
+        } else {
+          setErrorMessage(response.data.message); // Display the error message for invalid moves
+          console.log('Invalid move:', response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.error('Error validating move:', error);
+      });
   };
 
   const renderBoard = () => {
@@ -62,11 +67,21 @@ export default function Chessboard() {
     return board;
   };
 
-  console.log("Current Board State:", boardState);
-
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="flex justify-center items-center space-x-2">
+      <div className="flex flex-col items-center">
+        <div className="flex justify-center items-center space-x-2 mb-4">
+          {/* Display current turn */}
+          <h2 className="text-lg font-bold">
+            Current Turn: <span className={currentTurn === 'white' ? 'text-white' : 'text-black'}>{currentTurn}</span>
+          </h2>
+        </div>
+        {errorMessage && (
+          <div className="text-red-500 mb-4">
+            {/* Display error message for invalid moves */}
+            <p>{errorMessage}</p>
+          </div>
+        )}
         <div className="grid grid-cols-8">{renderBoard()}</div>
       </div>
     </DndProvider>
